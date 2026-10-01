@@ -1,0 +1,36 @@
+name: testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ${{ matrix.so }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        so: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # O juiz e o System.Net: o IPAddress e o IPNetwork, que e a implementacao
+      # que o resto da plataforma usa. Sao os 33 prefixos de IPv4, os 129 de
+      # IPv6, os 16.777.216 enderecos do 10.0.0.0/8 um por um, e 200 mil IPv6
+      # sorteados para a forma canonica da RFC 5952.
+      - name: testes
+        run: dotnet test testes/Rede.Testes/Rede.Testes.csproj -c Release --nologo -v q
+
+      # As medidas rodam para REGISTRAR numeros. Nao ha asseveracao de tempo.
+      - name: as grafias de IPv6
+        run: dotnet run --project ferramentas/Medidor/Medidor.csproj -c Release --nologo -- canonica
+
+      - name: o endereco em octal que fura filtro
+        run: dotnet run --project ferramentas/Medidor/Medidor.csproj -c Release --nologo -- octal
